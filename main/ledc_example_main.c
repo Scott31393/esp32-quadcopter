@@ -145,23 +145,25 @@ void app_main(void)
 {
     int ch;
     ledc_timer_config_t ledc_timer;
+
+
+
+    /*Initialize ledc_timer*/
     init_led_c_timer(&ledc_timer);
 
-    // Set configuration of timer0 for high speed channels
-    ledc_timer_config(&ledc_timer);
-#ifdef CONFIG_IDF_TARGET_ESP32
-    // Prepare and set configuration of timer1 for low speed channels
+
+    /* Prepare and set configuration of timer0 for high speed channels*/
     ledc_timer.speed_mode = LEDC_HS_MODE;
     ledc_timer.timer_num = LEDC_HS_TIMER;
     ledc_timer_config(&ledc_timer);
-#endif
+
     
-    // Set LED Controller with previously prepared configuration
+    /* Set LED Controller with previously prepared configuration*/
     for (ch = 0; ch < LEDC_TEST_CH_NUM; ch++) {
         ledc_channel_config(&ledc_channel[ch]);
     }
 
-    // Initialize fade service.
+    /* Initialize fade service.*/
     ledc_fade_func_install(0);
 
     while (1) {
