@@ -34,17 +34,27 @@
  *
  */
 
+#define NO_FADE 0
+
 #define LEDC_HS_TIMER          LEDC_TIMER_0
 #define LEDC_HS_MODE           LEDC_HIGH_SPEED_MODE
 
-#define LEDC_HS_CH0_GPIO       (18)
+#define LEDC_HS_CH0_GPIO       (13)
 #define LEDC_HS_CH0_CHANNEL    LEDC_CHANNEL_0
-#define LEDC_HS_CH1_GPIO       (19)
+#define LEDC_HS_CH1_GPIO       (12)
 #define LEDC_HS_CH1_CHANNEL    LEDC_CHANNEL_1
+#define LEDC_HS_CH2_GPIO       (14)
+#define LEDC_HS_CH2_CHANNEL    LEDC_CHANNEL_2
+#define LEDC_HS_CH3_GPIO       (27)
+#define LEDC_HS_CH3_CHANNEL    LEDC_CHANNEL_3
+#define LEDC_HS_CH4_GPIO       (26)
+#define LEDC_HS_CH4_CHANNEL    LEDC_CHANNEL_4
+#define LEDC_HS_CH5_GPIO       (25)
+#define LEDC_HS_CH5_CHANNEL    LEDC_CHANNEL_5
 
 
 
-#define LEDC_TEST_CH_NUM       (4)
+#define LEDC_TEST_CH_NUM       (6)
 #define LEDC_TEST_DUTY         (4000)
 #define LEDC_TEST_FADE_TIME    (3000)
 
@@ -76,6 +86,38 @@ ledc_channel_config_t ledc_channel[LEDC_TEST_CH_NUM] = {
         .channel    = LEDC_HS_CH1_CHANNEL,
         .duty       = 0,
         .gpio_num   = LEDC_HS_CH1_GPIO,
+        .speed_mode = LEDC_HS_MODE,
+        .hpoint     = 0,
+        .timer_sel  = LEDC_HS_TIMER
+    },
+    {
+        .channel    = LEDC_HS_CH2_CHANNEL,
+        .duty       = 0,
+        .gpio_num   = LEDC_HS_CH2_GPIO,
+        .speed_mode = LEDC_HS_MODE,
+        .hpoint     = 0,
+        .timer_sel  = LEDC_HS_TIMER
+    },
+    {
+        .channel    = LEDC_HS_CH3_CHANNEL,
+        .duty       = 0,
+        .gpio_num   = LEDC_HS_CH3_GPIO,
+        .speed_mode = LEDC_HS_MODE,
+        .hpoint     = 0,
+        .timer_sel  = LEDC_HS_TIMER
+    },
+    {
+        .channel    = LEDC_HS_CH4_CHANNEL,
+        .duty       = 0,
+        .gpio_num   = LEDC_HS_CH4_GPIO,
+        .speed_mode = LEDC_HS_MODE,
+        .hpoint     = 0,
+        .timer_sel  = LEDC_HS_TIMER
+    },
+    {
+        .channel    = LEDC_HS_CH5_CHANNEL,
+        .duty       = 0,
+        .gpio_num   = LEDC_HS_CH5_GPIO,
         .speed_mode = LEDC_HS_MODE,
         .hpoint     = 0,
         .timer_sel  = LEDC_HS_TIMER
@@ -123,9 +165,11 @@ void app_main(void)
     ledc_fade_func_install(0);
 
     while (1) {
-        printf("1. LEDC fade up to duty = %d\n", LEDC_TEST_DUTY);
-        ledc_set_fade_with_time(ledc_channel[0].speed_mode, ledc_channel[0].channel, LEDC_TEST_DUTY, 0);
-        ledc_fade_start(ledc_channel[0].speed_mode, ledc_channel[0].channel, LEDC_FADE_NO_WAIT);
-        vTaskDelay(LEDC_TEST_FADE_TIME / portTICK_PERIOD_MS);
+        for(ch=0; ch < LEDC_TEST_CH_NUM; ch++){
+            printf("1. LEDC fade up to duty = %d\n", LEDC_TEST_DUTY);
+            ledc_set_fade_with_time(ledc_channel[ch].speed_mode, ledc_channel[ch].channel, LEDC_TEST_DUTY, NO_FADE);
+            ledc_fade_start(ledc_channel[ch].speed_mode, ledc_channel[ch].channel, LEDC_FADE_NO_WAIT);
+            vTaskDelay(LEDC_TEST_FADE_TIME / portTICK_PERIOD_MS);
+        }
     }
 }
