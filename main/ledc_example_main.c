@@ -34,6 +34,14 @@
  *
  */
 
+
+/* Max duty cycle is based on resolution in particular:
+ * The range of the duty cycle values passed to functions depends on 
+ * selected duty_resolution and should be from 0 to (2 ** duty_resolution) - 1. 
+ * For example, if the selected duty resolution is 10
+ * then the duty cycle values can range from 0 to 1023. This provides the resolution of ~0.1%
+ */  
+
 #define NO_FADE 0
 
 #define LEDC_HS_TIMER          LEDC_TIMER_0
@@ -151,9 +159,6 @@ void app_main(void)
     /*Initialize ledc_timer*/
     init_led_c_timer(&ledc_timer);
 
-
-    /* Prepare and set configuration of timer0 for high speed channels*/
-    ledc_timer.speed_mode = LEDC_HS_MODE;
     ledc_timer.timer_num = LEDC_HS_TIMER;
     ledc_timer_config(&ledc_timer);
 
@@ -167,11 +172,17 @@ void app_main(void)
     ledc_fade_func_install(0);
 
     while (1) {
+        /*
+         * The range of the duty cycle values passed to functions depends on selected duty_resolution 
+         * and should be from 0 to (2 ** duty_resolution) - 1. 
+         * Duty cycle depends on resolution, for example  if the selected duty resolution (LEDC_TIMER_13_BIT) is 10, then the 
+         * duty cycle values can range from 0 to 1023.
+         */
+
         for(ch=0; ch < LEDC_TEST_CH_NUM; ch++){
-            printf("1. LEDC fade up to duty = %d\n", LEDC_TEST_DUTY);
-            ledc_set_fade_with_time(ledc_channel[ch].speed_mode, ledc_channel[ch].channel, LEDC_TEST_DUTY, NO_FADE);
-            ledc_fade_start(ledc_channel[ch].speed_mode, ledc_channel[ch].channel, LEDC_FADE_NO_WAIT);
-            vTaskDelay(LEDC_TEST_FADE_TIME / portTICK_PERIOD_MS);
+            ledc_set_duty(ledc_channel[ch].speed_mode, ledc_channel[ch].channel, 8000);
+            ledc_update_duty(ledc_channel[ch].speed_mode, ledc_channel[ch].channel);
         }
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
 }
