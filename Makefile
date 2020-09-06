@@ -3,7 +3,7 @@
 # project subdirectory.
 #
 
-PROJECT_NAME := ledc
+PROJECT_NAME := quadcopter
 
 include $(IDF_PATH)/make/project.mk
 
