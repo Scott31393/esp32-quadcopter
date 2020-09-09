@@ -83,14 +83,28 @@
 
 static const char *TAG = "example";
 
+
+struct cmd_t{
+    char buffer[128];
+    unsigned int duty;
+};
+
+QueueHandle_t cmd_queue;
+
+
 static void udp_server_task(void *pvParameters)
 {
     char rx_buffer[128];
-    char compared[128];
     char addr_str[128];
     int addr_family = (int)pvParameters;
     int ip_protocol = 0;
     struct sockaddr_in6 dest_addr;
+    struct cmd_t cmd;
+    struct cmd_t *cmd_ptr;
+    char *compared = "hello\n";
+
+    cmd_ptr = &cmd;
+    cmd_queue = xQueueCreate(1, sizeof(unsigned int));
 
     while (1) {
 
@@ -153,11 +167,22 @@ static void udp_server_task(void *pvParameters)
 
                 rx_buffer[len] = 0; // Null-terminate whatever we received and treat like a string...
                 ESP_LOGI(TAG, "Received %d bytes from %s:", len, addr_str);
-                ESP_LOGI(TAG, "%s", rx_buffer);
 
-                compared[] = "hello";
+                
+                int comp_len = strlen(compared);
+
+                for(int i =0; i<len; i++)
+                    ESP_LOGI(TAG, "%c", rx_buffer[i]);
+                    
+
+
+                for(int i =0; i<comp_len; i++)
+                    ESP_LOGI(TAG, "%c", compared[i]);
+
 
                 if(strcmp(rx_buffer, compared) == 0){
+                    cmd_ptr->duty = 4096;
+                    xQueueSend(cmd_queue, &(cmd_ptr->duty), 0);
                     ESP_LOGI(TAG, "NICE!!");
                 }else{
                     ESP_LOGI(TAG, "WRONG!!");
@@ -266,6 +291,10 @@ void app_main(void)
 {
     int ch;
     ledc_timer_config_t ledc_timer;
+    struct cmd_t current_cmd;
+    struct cmd_t *current_cmd_ptr;
+
+    
 
     ESP_ERROR_CHECK(nvs_flash_init());
     ESP_ERROR_CHECK(esp_netif_init());
@@ -301,6 +330,9 @@ void app_main(void)
     /* Initialize fade service.*/
     ledc_fade_func_install(0);
 
+    current_cmd_ptr = &current_cmd;
+    current_cmd_ptr->duty = 0;
+
     while (1) {
         /*
          * The range of the duty cycle values passed to functions depends on selected duty_resolution 
@@ -309,12 +341,22 @@ void app_main(void)
          * duty cycle values can range from 0 to 1023.
          */
 
+        
+
+        if(xQueueReceive(cmd_queue, &(current_cmd_ptr->duty), 0) == pdPASS){
+            ESP_LOGI(TAG, "Duty changed = %d", current_cmd_ptr->duty);
+        }
         for(ch=0; ch < LEDC_TEST_CH_NUM; ch++){
-            ledc_set_duty(ledc_channel[ch].speed_mode, ledc_channel[ch].channel, 8000);
+            ledc_set_duty(ledc_channel[ch].speed_mode, ledc_channel[ch].channel, current_cmd_ptr->duty);
             ledc_update_duty(ledc_channel[ch].speed_mode, ledc_channel[ch].channel);
         }
-        ledc_set_duty(ledc_channel[0].speed_mode, ledc_channel[0].channel, 4096);
-        ledc_update_duty(ledc_channel[0].speed_mode, ledc_channel[0].channel);
+
+        
+        
+
+        
+        // ledc_set_duty(ledc_channel[0].speed_mode, ledc_channel[0].channel, 4096);
+        // ledc_update_duty(ledc_channel[0].speed_mode, ledc_channel[0].channel);
         vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
 }
